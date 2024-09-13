@@ -2,9 +2,10 @@
 
 import streamlit as st
 import feedparser
-from wordcloud import WordCloud
+from wordcloud import WordCloud, STOPWORDS
 import matplotlib.pyplot as plt
 from io import BytesIO
+import re
 
 # 매일경제 RSS 피드 URL 매핑
 RSS_FEEDS = {
@@ -20,6 +21,7 @@ RSS_FEEDS = {
     "게임": "https://www.mk.co.kr/rss/50700001/"
 }
 
+# 키워드와 주제를 매칭하는 함수
 def classify_topic(keyword):
     keyword = keyword.lower()
     for category, words in {
@@ -38,21 +40,37 @@ def classify_topic(keyword):
             return category
     return "경제"
 
+# RSS 피드에서 뉴스를 가져오는 함수
 def fetch_rss_feed(url):
     feed = feedparser.parse(url)
     return feed['entries']
 
+# 간단한 요약을 생성하는 함수 (첫 두 문장만 사용)
 def simple_summarize(content):
     sentences = content.split('. ')
     return '. '.join(sentences[:2]) + '.' if len(sentences) > 2 else content
 
+# 불필요한 숫자와 특수문자를 제거하는 함수
+def clean_text(text):
+    text = re.sub(r'\d+', '', text)  # 숫자 제거
+    text = re.sub(r'[^\w\s]', '', text)  # 특수문자 제거
+    return text
+
+# 워드클라우드 생성 함수
 def create_wordcloud(text):
-    wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
+    stopwords = set(STOPWORDS)
+    stopwords.update(["said", "news", "reuters", "기사", "요약", "뉴스"])  # 불필요한 단어 추가
+
+    # 텍스트 정리 후 워드클라우드 생성
+    cleaned_text = clean_text(text)
+    wordcloud = WordCloud(width=800, height=400, background_color='white', stopwords=stopwords).generate(cleaned_text)
+    
     buffer = BytesIO()
     wordcloud.to_image().save(buffer, format="PNG")
     buffer.seek(0)
     return buffer
 
+# 메인 함수
 def main():
     st.title("뉴스 요약 및 워드클라우드 생성기")
     user_input = st.text_input("관심 있는 주제나 키워드를 입력하세요:")

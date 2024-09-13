@@ -6,14 +6,23 @@ from newspaper import Article
 import nltk
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+import os
 from io import BytesIO
 
-# NLTK에서 punkt 데이터 다운로드
+# NLTK 데이터 경로 설정 (명시적으로 경로 지정)
+nltk_data_dir = os.path.join(os.getcwd(), "nltk_data")
+if not os.path.exists(nltk_data_dir):
+    os.makedirs(nltk_data_dir)
+
+# NLTK 다운로드 시 데이터 경로 지정
 @st.cache_resource
 def download_nltk_resources():
-    nltk.download('punkt')
+    nltk.download('punkt', download_dir=nltk_data_dir)
 
 download_nltk_resources()
+
+# NLTK 데이터 경로 지정
+nltk.data.path.append(nltk_data_dir)
 
 # 매일경제 RSS 피드 URL 매핑
 RSS_FEEDS = {

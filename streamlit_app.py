@@ -1,5 +1,3 @@
-# pip install feedparser nltk wordcloud matplotlib newspaper3k lxml[html_clean]
-
 import streamlit as st
 import feedparser
 import matplotlib.pyplot as plt
@@ -7,6 +5,7 @@ import seaborn as sns
 from collections import Counter
 import squarify
 import re
+import matplotlib.font_manager as fm
 
 # 매일경제 RSS 피드 URL 매핑
 RSS_FEEDS = {
@@ -21,6 +20,11 @@ RSS_FEEDS = {
     "스포츠": "https://www.mk.co.kr/rss/71000001/",
     "게임": "https://www.mk.co.kr/rss/50700001/"
 }
+
+# 한글 폰트 설정 (예: 맑은 고딕)
+def set_korean_font():
+    plt.rc('font', family='Malgun Gothic')  # 맑은 고딕 사용
+    plt.rc('axes', unicode_minus=False)  # 마이너스 부호가 깨지는 문제 해결
 
 # 키워드와 주제를 매칭하는 함수
 def classify_topic(keyword):
@@ -61,6 +65,7 @@ def clean_text(text):
 
 # 단어 빈도수를 시각적으로 보여주는 히트맵
 def show_word_heatmap(word_counts):
+    set_korean_font()  # 한글 폰트 설정
     words, counts = zip(*word_counts)
     heatmap_data = [counts]
     
@@ -71,6 +76,7 @@ def show_word_heatmap(word_counts):
 
 # 단어 빈도수를 트리맵으로 시각화하는 함수
 def show_word_treemap(word_counts):
+    set_korean_font()  # 한글 폰트 설정
     words, counts = zip(*word_counts)
     
     plt.figure(figsize=(10, 6))
@@ -131,3 +137,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from io import BytesIO
 
 # NLTK에서 punkt 데이터 다운로드
-@st.cache_resource
 def download_nltk_resources():
     nltk.download('punkt')
 

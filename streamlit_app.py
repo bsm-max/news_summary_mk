@@ -59,34 +59,41 @@ def main():
     
     # 사용자로부터 표시할 뉴스 개수를 입력받음 (기본값 10개)
     max_news = st.number_input("표시할 뉴스 개수", min_value=1, max_value=50, value=10)
-
-    if user_input:
-        topic = classify_topic(user_input)
-        st.write(f"선택된 주제: {topic}")
-        
-        rss_url = RSS_FEEDS.get(topic)
-        news_items = fetch_rss_feed(rss_url)
-        
-        if not news_items:
-            st.error("RSS 피드에서 뉴스를 가져올 수 없습니다.")
-            return
-        
-        st.write(f"{topic}와 관련된 뉴스 {len(news_items)}개를 가져왔습니다.")
-        
-        all_summaries = ""
-        for i, news in enumerate(news_items[:max_news], 1):  # 사용자 입력에 따라 뉴스 개수 조정
-            summary = simple_summarize(news.get("summary", news.get("title", "No content available")))
-            st.write(f"{i}. [{news.title}]({news.link})")
-            st.write(f"요약: {summary}")
-            all_summaries += " " + summary
-        
-        if all_summaries:
-            buffer = create_wordcloud(all_summaries)
-            plt.figure(figsize=(10, 5))
-            plt.imshow(WordCloud(background_color='white').generate(all_summaries), interpolation='bilinear')
-            plt.axis('off')
-            st.pyplot(plt)
-            st.download_button("워드클라우드 다운로드", buffer, "wordcloud.png", "image/png")
+    
+    # 뉴스보기 버튼 추가
+    if st.button("뉴스보기"):
+        if user_input:
+            topic = classify_topic(user_input)
+            st.write(f"선택된 주제: {topic}")
+            
+            rss_url = RSS_FEEDS.get(topic)
+            news_items = fetch_rss_feed(rss_url)
+            
+            # 뉴스 개수를 입력한 값만큼 제한하여 가져옴
+            selected_news = news_items[:max_news]
+            
+            if not selected_news:
+                st.error("RSS 피드에서 뉴스를 가져올 수 없습니다.")
+                return
+            
+            st.write(f"{topic}와 관련된 뉴스 {len(selected_news)}개를 가져왔습니다.\n")
+            
+            # 뉴스 요약 및 워드클라우드를 위한 전체 텍스트 수집
+            all_summaries = ""
+            for i, news in enumerate(selected_news, 1):
+                summary = simple_summarize(news.get("summary", news.get("title", "No content available")))
+                st.write(f"{i}. [{news.title}]({news.link})")
+                st.write(f"요약: {summary}")
+                all_summaries += " " + summary
+            
+            # 워드클라우드 생성 및 출력
+            if all_summaries:
+                buffer = create_wordcloud(all_summaries)
+                plt.figure(figsize=(10, 5))
+                plt.imshow(WordCloud(background_color='white').generate(all_summaries), interpolation='bilinear')
+                plt.axis('off')
+                st.pyplot(plt)
+                st.download_button("워드클라우드 다운로드", buffer, "wordcloud.png", "image/png")
 
 if __name__ == "__main__":
     main()

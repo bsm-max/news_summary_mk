@@ -52,14 +52,17 @@ def simple_summarize(content):
 
 # 불필요한 숫자와 특수문자를 제거하는 함수
 def clean_text(text):
-    text = re.sub(r'\d+', '', text)  # 숫자 제거
+    # 숫자와 특수기호 제거
+    text = re.sub(r'\d+', '', text)  # 모든 숫자 제거
     text = re.sub(r'[^\w\s]', '', text)  # 특수문자 제거
+    text = re.sub(r'\b\w{1,2}\b', '', text)  # 1~2글자의 짧은 단어 제거
     return text
 
 # 워드클라우드 생성 함수
 def create_wordcloud(text):
     stopwords = set(STOPWORDS)
-    stopwords.update(["said", "news", "reuters", "기사", "요약", "뉴스"])  # 불필요한 단어 추가
+    # 추가 불용어 설정: 의미 없는 단어나 숫자와 관련된 불필요한 단어들
+    stopwords.update(["said", "news", "reuters", "기사", "요약", "뉴스", "ai", "year", "month", "day", "week", "one", "two", "three", "million", "billion", "trillion", "dollar"])
 
     # 텍스트 정리 후 워드클라우드 생성
     cleaned_text = clean_text(text)
@@ -115,3 +118,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

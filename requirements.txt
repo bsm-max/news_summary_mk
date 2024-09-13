@@ -4,3 +4,4 @@ wordcloud
 matplotlib
 newspaper3k
 lxml[html_clean]
+seaborn

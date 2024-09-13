@@ -2,9 +2,10 @@
 
 import streamlit as st
 import feedparser
-from wordcloud import WordCloud, STOPWORDS
 import matplotlib.pyplot as plt
-from io import BytesIO
+import seaborn as sns
+from collections import Counter
+import squarify
 import re
 
 # 매일경제 RSS 피드 URL 매핑
@@ -58,24 +59,29 @@ def clean_text(text):
     text = re.sub(r'\b\w{1,2}\b', '', text)  # 1~2글자의 짧은 단어 제거
     return text
 
-# 워드클라우드 생성 함수
-def create_wordcloud(text):
-    stopwords = set(STOPWORDS)
-    # 추가 불용어 설정: 의미 없는 단어나 숫자와 관련된 불필요한 단어들
-    stopwords.update(["said", "news", "reuters", "기사", "요약", "뉴스", "ai", "year", "month", "day", "week", "one", "two", "three", "million", "billion", "trillion", "dollar"])
-
-    # 텍스트 정리 후 워드클라우드 생성
-    cleaned_text = clean_text(text)
-    wordcloud = WordCloud(width=800, height=400, background_color='white', stopwords=stopwords).generate(cleaned_text)
+# 단어 빈도수를 시각적으로 보여주는 히트맵
+def show_word_heatmap(word_counts):
+    words, counts = zip(*word_counts)
+    heatmap_data = [counts]
     
-    buffer = BytesIO()
-    wordcloud.to_image().save(buffer, format="PNG")
-    buffer.seek(0)
-    return buffer
+    plt.figure(figsize=(12, 2))
+    sns.heatmap(heatmap_data, annot=True, fmt="d", cmap="coolwarm", xticklabels=words, cbar=False)
+    plt.title("단어 빈도수 히트맵")
+    plt.show()
+
+# 단어 빈도수를 트리맵으로 시각화하는 함수
+def show_word_treemap(word_counts):
+    words, counts = zip(*word_counts)
+    
+    plt.figure(figsize=(10, 6))
+    squarify.plot(sizes=counts, label=words, alpha=.8)
+    plt.title("단어 빈도수 트리맵")
+    plt.axis('off')
+    plt.show()
 
 # 메인 함수
 def main():
-    st.title("뉴스 요약 및 워드클라우드 생성기")
+    st.title("뉴스 요약 및 단어 빈도수 시각화")
     user_input = st.text_input("관심 있는 주제나 키워드를 입력하세요:")
     
     # 사용자로부터 표시할 뉴스 개수를 입력받음 (기본값 10개)
@@ -99,7 +105,7 @@ def main():
             
             st.write(f"{topic}와 관련된 뉴스 {len(selected_news)}개를 가져왔습니다.\n")
             
-            # 뉴스 요약 및 워드클라우드를 위한 전체 텍스트 수집
+            # 뉴스 요약 및 단어 빈도수를 위한 전체 텍스트 수집
             all_summaries = ""
             for i, news in enumerate(selected_news, 1):
                 summary = simple_summarize(news.get("summary", news.get("title", "No content available")))
@@ -107,15 +113,21 @@ def main():
                 st.write(f"요약: {summary}")
                 all_summaries += " " + summary
             
-            # 워드클라우드 생성 및 출력
-            if all_summaries:
-                buffer = create_wordcloud(all_summaries)
-                plt.figure(figsize=(10, 5))
-                plt.imshow(WordCloud(background_color='white').generate(all_summaries), interpolation='bilinear')
-                plt.axis('off')
-                st.pyplot(plt)
-                st.download_button("워드클라우드 다운로드", buffer, "wordcloud.png", "image/png")
+            # 텍스트 전처리 후 단어 빈도 계산
+            cleaned_text = clean_text(all_summaries)
+            word_counts = Counter(cleaned_text.split()).most_common(10)  # 상위 10개 단어
+            
+            # 히트맵 시각화
+            st.write("### 단어 빈도수 히트맵")
+            plt.figure(figsize=(12, 2))
+            show_word_heatmap(word_counts)
+            st.pyplot(plt)
+            
+            # 트리맵 시각화
+            st.write("### 단어 빈도수 트리맵")
+            plt.figure(figsize=(10, 6))
+            show_word_treemap(word_counts)
+            st.pyplot(plt)
 
 if __name__ == "__main__":
     main()
-

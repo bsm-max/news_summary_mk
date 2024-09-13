@@ -57,6 +57,9 @@ def main():
     st.title("뉴스 요약 및 워드클라우드 생성기")
     user_input = st.text_input("관심 있는 주제나 키워드를 입력하세요:")
     
+    # 사용자로부터 표시할 뉴스 개수를 입력받음 (기본값 10개)
+    max_news = st.number_input("표시할 뉴스 개수", min_value=1, max_value=50, value=10)
+
     if user_input:
         topic = classify_topic(user_input)
         st.write(f"선택된 주제: {topic}")
@@ -71,7 +74,7 @@ def main():
         st.write(f"{topic}와 관련된 뉴스 {len(news_items)}개를 가져왔습니다.")
         
         all_summaries = ""
-        for i, news in enumerate(news_items[:10], 1):
+        for i, news in enumerate(news_items[:max_news], 1):  # 사용자 입력에 따라 뉴스 개수 조정
             summary = simple_summarize(news.get("summary", news.get("title", "No content available")))
             st.write(f"{i}. [{news.title}]({news.link})")
             st.write(f"요약: {summary}")
